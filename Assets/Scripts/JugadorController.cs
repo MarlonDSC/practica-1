@@ -1,11 +1,15 @@
 using UnityEngine;
 using TMPro;
+using System.Collections;
+using UnityEngine.SceneManagement;
+
 public class JugadorController : MonoBehaviour
 {
     private Rigidbody rb;
     public float velocidad = 5;
     private int contador = 0;
     public TextMeshProUGUI textoContador, textoGanar;
+    public GameObject background;
     // Use this for initialization
     void Start()
     {
@@ -30,21 +34,42 @@ public class JugadorController : MonoBehaviour
     {
         if (other.gameObject.CompareTag("Coleccionable"))
         {
-            other.gameObject.SetActive(false);
             contador = contador + 1;
             //Actualizo elt exto del contador
             setTextoContador();
-
+            StartCoroutine(PlayAndTurnOff(other));
         }
     }
 
+    IEnumerator PlayAndTurnOff(Collider other)
+    {
+        other.gameObject.GetComponent<BoxCollider>().enabled = false;
+        other.gameObject.transform.GetChild(0).gameObject.SetActive(false);
+        other.GetComponent<AudioSource>().Play();
+        yield return new WaitForSeconds(other.GetComponent<AudioSource>().clip.length);
+        other.gameObject.SetActive(false);
+    }
     void setTextoContador()
     {
         textoContador.text = "Contador: " + contador.ToString();
         if (contador >= 12)
         {
             textoGanar.text = "¡Ganaste!";
+            background.SetActive(true);
+            StartCoroutine(ChangeText());
+            StartCoroutine(SendToMainScene());
         }
+    }
 
+    IEnumerator ChangeText(){
+        textoGanar.text = "¡Ganaste!";
+        yield return new WaitForSeconds(2);
+        textoGanar.text = "Redirigiendo a la escena principal...";
+    }
+
+    IEnumerator SendToMainScene()
+    {
+        yield return new WaitForSeconds(5);
+        SceneManager.LoadScene("Inicio");
     }
 }
